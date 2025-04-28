@@ -4,9 +4,7 @@ output_dir=$2
 max_depth=$3
 
 
-mkdir -p "$output_dir"
-
-find "$input_dir" -max_depth "$max_depth" -type f -exec cp --parents {} "$output_dir" \;
+find "$input_dir" -type f -exec cp {} "$output_dir" \;
 exit 0
 
 
