@@ -1,8 +1,14 @@
 #!/bin/bash
 
+
+if [ $# -lt 2 ]; then
+    echo "Usage: $0 <input_dir> <output_dir> [max_depth]"
+    exit 1
+fi
+
 input_dir="$1"
 output_dir="$2"
-max_depth=${3:-0} 
+max_depth=${3:-0}  
 
 mkdir -p "$output_dir"
 
@@ -32,6 +38,7 @@ if [ $max_depth -eq 0 ]; then
     echo "Все файлы скопированы в $output_dir"
     exit 0
 fi
+
 
 process_item() {
     local src="$1"
@@ -74,6 +81,9 @@ traverse() {
         fi
     done
 }
+
+
 traverse "$input_dir" "" 1
 
 echo "Файлы скопированы в $output_dir с максимальной глубиной $max_depth"
+
