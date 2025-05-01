@@ -19,17 +19,23 @@ if [ $max_depth -eq 0 ]; then
     exit 0
 fi
 
-find "$input_dir" -type f | while read -r file; do
+find "$input_dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
     rel_path="${file#$input_dir/}"
-    depth=$(grep -o '/' <<< "$rel_path" | wc -l)
     
-    if [ $depth -ge $max_depth ]; then
-        rel_path=$(echo "$rel_path" | cut -d'/' -f$((max_depth))-)
+    depth=$(tr -cd '/' <<< "$rel_path" | wc -c)
+    depth=$((depth + 1))
+    
+    if [ $depth -gt $max_depth ]; then
+        overflow=$((depth - max_depth))
+        rel_path=$(echo "$rel_path" | awk -F'/' -v o="$overflow" '{
+            for (i=o+1; i<=NF; i++) printf "%s%s", $i, (i<NF?"/":"")
+        }')
     fi
     
     dest="$output_dir/$rel_path"
     mkdir -p "$(dirname "$dest")"
-    cp --backup=numbered "$file" "$dest"
+    dest=$(unique_name "$dest")
+    cp "$file" "$dest"
 done
 
 
