@@ -56,10 +56,10 @@ traverse() {
         process_item "$item" "$new_rel_path" "$current_depth"
         
         if [ -d "$item" ]; then
-            traverse "$item" "$new_rel_path" $((current_depth + 1))
+            traverse "$item" "$new_rel_path" $((current_depth))
         fi
     done
 }
-traverse "$input_dir" "" 2
+traverse "$input_dir" "" 1
 
 exit 0
