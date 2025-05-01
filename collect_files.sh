@@ -3,6 +3,9 @@ input_dir="$1"
 output_dir="$2"
 max_depth=0  
 
+if [ $# -eq 4 ] && [ "$3" == "--max_depth" ] && [[ "$4" =~ ^[0-9]+$ ]]; then
+    max_depth="$4"
+fi
 
 mkdir -p "$output_dir"
 
