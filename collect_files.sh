@@ -1,29 +1,39 @@
 #!/bin/bash
 
 
-if [ $# -lt 2 ]; then
-    echo "Usage: $0 <input_dir> <output_dir> [max_depth]"
+input_dir="$1"
+output_dir="$2"
+max_depth=0  
+
+
+if [ $# -eq 4 ] && [ "$3" == "--max_depth" ] && [[ "$4" =~ ^[0-9]+$ ]]; then
+    max_depth="$4"
+elif [ $# -gt 2 ]; then
+    echo "Ошибка: Неправильные аргументы. Используйте:"
+    echo "  $0 <input_dir> <output_dir> [--max_depth N]"
     exit 1
 fi
 
-input_dir="$1"
-output_dir="$2"
-max_depth=${3:-0}  
+
+if [ ! -d "$input_dir" ]; then
+    echo "Ошибка: Входная директория не существует: $input_dir"
+    exit 1
+fi
+
 
 mkdir -p "$output_dir"
+
 
 unique_name() {
     local path="$1"
     local counter=1
-    local original="$path"
-    
     while [ -e "$path" ]; do
-        if [[ "$original" =~ \.[^./]+$ ]]; then
-            path="${original%.*}_${counter}.${original##*.}"
+        if [[ "$path" =~ \.[^./]+$ ]]; then
+            path="${path%.*}_${counter}.${path##*.}"
         else
-            path="${original}_${counter}"
+            path="${path}_${counter}"
         fi
-        counter=$((counter+1))
+        counter=$((counter + 1))
     done
     echo "$path"
 }
@@ -40,50 +50,26 @@ if [ $max_depth -eq 0 ]; then
 fi
 
 
-process_item() {
-    local src="$1"
-    local rel_path="$2"
-    local current_depth="$3"
+find "$input_dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
+    # Получаем относительный путь
+    rel_path="${file#$input_dir/}"
+
+    depth=$(tr -cd '/' <<< "$rel_path" | wc -c)
+    depth=$((depth + 1))
     
-    local new_rel_path="$rel_path"
-    if [ $current_depth -gt $max_depth ]; then
-        local overflow=$((current_depth - max_depth))
-        new_rel_path=$(echo "$rel_path" | awk -F'/' -v o="$overflow" '{
+  
+    if [ $depth -gt $max_depth ]; then
+        overflow=$((depth - max_depth))
+        rel_path=$(echo "$rel_path" | awk -F'/' -v o="$overflow" '{
             for (i=o+1; i<=NF; i++) printf "%s%s", $i, (i<NF?"/":"")
         }')
     fi
-
-    local dest="${output_dir}/${new_rel_path}"
     
-    if [ -f "$src" ]; then
-        dest=$(unique_name "$dest")
-        mkdir -p "$(dirname "$dest")"
-        cp "$file" "$dest"
-    elif [ -d "$src" ] && [ -n "$(ls -A "$src")" ]; then
-        mkdir -p "$dest"
-    fi
-}
-
-traverse() {
-    local current_dir="$1"
-    local rel_path="$2"
-    local current_depth="$3"
-    
-    for item in "$current_dir"/*; do
-        [ -e "$item" ] || continue
-        local base=$(basename "$item")
-        local new_rel_path="${rel_path:+$rel_path/}$base"
-        
-        process_item "$item" "$new_rel_path" "$current_depth"
-        
-        if [ -d "$item" ]; then
-            traverse "$item" "$new_rel_path" $((current_depth + 1))
-        fi
-    done
-}
-
-
-traverse "$input_dir" "" 1
+    dest="$output_dir/$rel_path"
+    mkdir -p "$(dirname "$dest")"
+    dest=$(unique_name "$dest")
+    cp "$file" "$dest"
+done
 
 echo "Файлы скопированы в $output_dir с максимальной глубиной $max_depth"
 
