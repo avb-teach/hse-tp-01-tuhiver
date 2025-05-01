@@ -16,6 +16,7 @@ unique_name() {
         fi
         counter=$((counter + 1))
     done
+    echo "$path"
 }
 if [ $max_depth -eq 0 ]; then
     find "$input_dir" -type f -exec cp {} "$output_dir" \; 
@@ -36,6 +37,9 @@ find "$input_dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
     dest=$(unique_name "$dest")
     cp "$file" "$dest"
 done
+
+
+
 
 
 
