@@ -7,7 +7,19 @@ if [ $# -eq 4 ] && [ "$3" == "--max_depth" ] && [[ "$4" =~ ^[0-9]+$ ]]; then
     max_depth="$4"
 fi
 mkdir -p "$output_dir"
-
+unique_name() {
+    local path="$1"
+    local counter=1
+    while [ -e "$path" ]; do
+        if [[ "$path" =~ \.[^./]+$ ]]; then
+            path="${path%.*}_${counter}.${path##*.}"
+        else
+            path="${path}_${counter}"
+        fi
+        counter=$((counter + 1))
+    done
+    echo "$path"
+}
 if [ $max_depth -eq 0 ]; then
     find "$input_dir" -type f -exec cp {} "$output_dir" \; 
     exit 0
