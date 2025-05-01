@@ -33,6 +33,6 @@ find "$input_dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
     dest=$(unique_name "$dest")
     cp "$file" "$dest"
 done
-
+echo "Файлы скопированы в $output_dir с максимальной глубиной $max_depth"
 
 
