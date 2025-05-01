@@ -2,33 +2,25 @@
 input_dir="$1"
 output_dir="$2"
 max_depth=0  
-
-# Обработка --max_depth если указан
-if ["$3" == "--max_depth" ]; then
-        max_depth="$4"
+if [ "$3" == "--max_depth" ]; then
+    max_depth="$4"
 fi
-
 unique_name() {
     local path="$1"
     local counter=1
-    local original="$path"
-    
     while [ -e "$path" ]; do
-        if [[ "$original" =~ \.[^./]+$ ]]; then
-            path="${original%.*}_${counter}.${original##*.}"
+        if [[ "$path" =~ \.[^./]+$ ]]; then
+            path="${path%.*}_${counter}.${path##*.}"
         else
-            path="${original}_${counter}"
+            path="${path}_${counter}"
         fi
         counter=$((counter + 1))
     done
 }
-
 if [ $max_depth -eq 0 ]; then
-    find "$input_dir" -type f -exec cp {} "$output_dir"\;
+    find "$input_dir" -type f -exec cp {} "$output_dir" \; 
     exit 0
 fi
-
-
 find "$input_dir" -type f -print0 | while IFS= read -r -d $'\0' file; do
     rel_path="${file#$input_dir/}"
     depth=$(tr -cd '/' <<< "$rel_path" | wc -c)
